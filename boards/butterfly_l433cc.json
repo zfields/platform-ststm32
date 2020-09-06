@@ -1,0 +1,45 @@
+{
+  "build": {
+    "core": "stm32l4",
+    "cpu": "cortex-m4",
+    "extra_flags": "-DSTM32L433xx -DARDUINO_STM32L4_BUTTERFLY -D__FPU_PRESENT=1",
+    "f_cpu": "80000000L",
+    "mcu": "stm32l433cct6",
+    "product_line": "STM32L433xx",
+    "variant": "STM32L433CC-Butterfly",
+	"hwids": [
+    ["0x0483", "0xDF11"],
+    ["0x1209", "0x6668"]
+	],
+	"usb_product": "Butterfly"
+  },
+  "debug": {
+    "default_tools": [
+      "stlink"
+    ],
+    "jlink_device": "STM32L433CC",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_board": "st_nucleo_l4",
+    "svd_path": "STM32L4x3.svd"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "name": "Butterfly-L433CC",
+  "upload": {
+    "maximum_ram_size": 65536,
+    "maximum_size": 262144,
+    "protocol": "stlink",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "mbed",
+      "dfu"
+    ]
+  },
+  "url": "https://developer.mbed.org/platforms/ST-Nucleo-L476RG/",
+  "vendor": "Tlera Corporation"
+}

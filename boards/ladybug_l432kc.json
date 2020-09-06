@@ -1,0 +1,45 @@
+{
+  "build": {
+    "core": "stm32l4",
+    "cpu": "cortex-m4",
+    "extra_flags": "-DSTM32L432xx -DARDUINO_STM32L4_LADYBUG -D__FPU_PRESENT=1",
+    "f_cpu": "80000000L",
+    "mcu": "stm32l432kct6",
+    "product_line": "STM32L432xx",
+    "variant": "STM32L432KC-Ladybug",
+	"hwids": [
+    ["0x0483", "0xDF11"],
+    ["0x1209", "0x6669"]
+	],
+	"usb_product": "Ladybug"
+  },
+  "debug": {
+    "default_tools": [
+      "stlink"
+    ],
+    "jlink_device": "STM32L432KC",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_board": "st_nucleo_l4",
+    "svd_path": "STM32L4x2.svd"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "name": "Ladybug-L432KC",
+  "upload": {
+    "maximum_ram_size": 65536,
+    "maximum_size": 262144,
+    "protocol": "stlink",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "mbed",
+      "dfu"
+    ]
+  },
+  "url": "https://developer.mbed.org/platforms/ST-Nucleo-L476RG/",
+  "vendor": "Tlera Corporation"
+}

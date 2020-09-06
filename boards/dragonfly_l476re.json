@@ -1,0 +1,48 @@
+{
+  "build": {
+    "core": "stm32l4",
+    "cpu": "cortex-m4",
+    "extra_flags": "-DSTM32L476xx -DARDUINO_STM32L4_DRAGONFLY -D__FPU_PRESENT=1",
+    "f_cpu": "80000000L",
+    "mcu": "stm32l476ret6",
+    "product_line": "STM32L476xx",
+    "variant": "STM32L476RE-Dragonfly",
+	"hwids": [
+    ["0x0483", "0xDF11"],
+    ["0x1209", "0x6667"]
+	],
+	"usb_product": "Dragonfly"
+  },
+  "connectivity": [
+    "can"
+  ],
+  "debug": {
+    "default_tools": [
+      "stlink"
+    ],
+    "jlink_device": "STM32L476RE",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_board": "st_nucleo_l4",
+    "svd_path": "STM32L4x6.svd"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "name": "Dragonfly-L476RE",
+  "upload": {
+    "maximum_ram_size": 131072,
+    "maximum_size": 507904,
+    "protocol": "stlink",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "mbed",
+      "dfu"
+    ]
+  },
+  "url": "https://developer.mbed.org/platforms/ST-Nucleo-L476RG/",
+  "vendor": "Tlera Corporation"
+}
