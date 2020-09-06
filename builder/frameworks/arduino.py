@@ -31,7 +31,6 @@ env = DefaultEnvironment()
 mcu = env.BoardConfig().get("build.mcu")
 core = env.BoardConfig().get("build.core", "")
 
-
 if core == "maple":
     build_script = join(
         env.PioPlatform().get_package_dir("framework-arduinoststm32-maple"),
@@ -43,6 +42,11 @@ if core == "maple":
             "Error: %s family is not supported by maple core\n" % mcu[0:7])
         env.Exit(1)
 
+elif core == "stm32l4":
+    SConscript(
+        join(env.PioPlatform().get_package_dir(
+            "framework-arduinoststm32-stm32l4"),
+            "tools", "platformio-build.py"))
 else:
     SConscript(
         join(env.PioPlatform().get_package_dir(
