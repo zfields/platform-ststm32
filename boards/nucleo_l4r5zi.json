@@ -1,11 +1,12 @@
 {
   "build": {
+    "core": "stm32",
     "cpu": "cortex-m4",
     "extra_flags": "-DSTM32L4R5xx",
     "f_cpu": "120000000L",
     "mcu": "stm32l4r5zit6",
     "product_line": "STM32L4R5xx",
-    "variant": "NUCLEO_L4R5ZI"
+    "variant": "STM32L4xx/L4R5Z(G-I)T_L4R7ZIT_L4S5ZIT_L4S7ZIT"
   },
   "connectivity": [
     "can"
@@ -19,7 +20,8 @@
       "stlink"
     ],
     "openocd_board": "st_nucleo_l4",
-    "svd_path": "STM32L4x5.svd"
+    "openocd_target": "stm32l4x",
+    "svd_path": "STM32L4R5.svd"
   },
   "frameworks": [
     "arduino",
@@ -35,6 +37,7 @@
     "protocol": "stlink",
     "protocols": [
       "jlink",
+      "cmsis-dap",
       "stlink",
       "blackmagic",
       "mbed"

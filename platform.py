@@ -14,11 +14,12 @@
 
 import json
 import os
-
-from platform import system
+import sys
 
 from platformio.managers.platform import PlatformBase
-from platformio.util import get_systype
+
+
+IS_WINDOWS = sys.platform.startswith("win")
 
 class Ststm32Platform(PlatformBase):
 
@@ -27,16 +28,27 @@ class Ststm32Platform(PlatformBase):
         board_config = self.board_config(board)
         build_core = variables.get(
             "board_build.core", board_config.get("build.core", "arduino"))
+        build_mcu = variables.get("board_build.mcu", board_config.get("build.mcu", ""))
 
         frameworks = variables.get("pioframework", [])
         if "arduino" in frameworks:
-            if build_core == "maple":
+            if board.startswith("portenta"):
+                self.frameworks["arduino"]["package"] = "framework-arduino-mbed"
+                self.frameworks["arduino"][
+                    "script"
+                ] = "builder/frameworks/arduino/mbed-core/arduino-core-mbed.py"
+                self.packages["framework-arduinoststm32"]["optional"] = True
+            elif build_core == "maple":
                 self.frameworks["arduino"]["package"] = "framework-arduinoststm32-maple"
                 self.packages["framework-arduinoststm32-maple"]["optional"] = False
                 self.packages["framework-arduinoststm32"]["optional"] = True
+            elif build_core == "stm32l0":
+                self.frameworks["arduino"]["package"] = "framework-arduinoststm32l0"
+                self.packages["framework-arduinoststm32l0"]["optional"] = False
+                self.packages["framework-arduinoststm32"]["optional"] = True
             else:
                 self.packages["toolchain-gccarmnoneeabi"]["version"] = "~1.90201.0"
-                self.packages["framework-cmsis"]["version"] = "~2.50501.0"
+                self.packages["framework-cmsis"]["version"] = "~2.50700.0"
                 self.packages["framework-cmsis"]["optional"] = False
 
         if "mbed" in frameworks:
@@ -45,15 +57,19 @@ class Ststm32Platform(PlatformBase):
             if os.path.isfile(deprecated_boards_file):
                 with open(deprecated_boards_file) as fp:
                     if board in json.load(fp):
-                        self.packages["framework-mbed"]["version"] = "~6.51504.0"
+                        self.packages["framework-mbed"]["version"] = "~6.51506.0"
             self.packages["toolchain-gccarmnoneeabi"]["version"] = "~1.90201.0"
 
         if "cmsis" in frameworks:
-            assert board_config.get(
-                "build.mcu", ""), ("Missing MCU field for %s" % board)
-            device_package = "framework-cmsis-" + board_config.get("build.mcu")[0:7]
+            assert build_mcu, ("Missing MCU field for %s" % board)
+            device_package = "framework-cmsis-" + build_mcu[0:7]
             if device_package in self.packages:
                 self.packages[device_package]["optional"] = False
+
+        if "stm32cube" in frameworks:
+            assert build_mcu, ("Missing MCU field for %s" % board)
+            device_package = "framework-stm32cube%s" % build_mcu[5:7]
+            self.frameworks["stm32cube"]["package"] = device_package
 
         if any(f in frameworks for f in ("cmsis", "stm32cube")):
             self.packages["tool-ldscripts-ststm32"]["optional"] = False
@@ -63,20 +79,19 @@ class Ststm32Platform(PlatformBase):
             self.packages["tool-dfuutil"]["optional"] = False
 
         if board == "mxchip_az3166":
-            self.frameworks['arduino'][
-                'package'] = "framework-arduinostm32mxchip"
-            self.frameworks['arduino'][
-                'script'] = "builder/frameworks/arduino/mxchip.py"
-            self.packages['toolchain-gccarmnoneeabi']['version'] = "~1.60301.0"
+            self.frameworks["arduino"][
+                "package"] = "framework-arduinostm32mxchip"
+            self.frameworks["arduino"][
+                "script"] = "builder/frameworks/arduino/mxchip.py"
+            self.packages["toolchain-gccarmnoneeabi"]["version"] = "~1.60301.0"
 
         if "zephyr" in variables.get("pioframework", []):
             for p in self.packages:
-                if p.startswith("framework-zephyr-") or p in (
-                        "tool-cmake", "tool-dtc", "tool-ninja"):
+                if p in ("tool-cmake", "tool-dtc", "tool-ninja"):
                     self.packages[p]["optional"] = False
-            self.packages['toolchain-gccarmnoneeabi']['version'] = "~1.80201.0"
-            if "windows" not in get_systype():
-                self.packages['tool-gperf']['optional'] = False
+            self.packages["toolchain-gccarmnoneeabi"]["version"] = "~1.80201.0"
+            if not IS_WINDOWS:
+                self.packages["tool-gperf"]["optional"] = False
 
         # configure J-LINK tool
         jlink_conds = [
@@ -111,21 +126,21 @@ class Ststm32Platform(PlatformBase):
         upload_protocols = board.manifest.get("upload", {}).get(
             "protocols", [])
         if "tools" not in debug:
-            debug['tools'] = {}
+            debug["tools"] = {}
 
         # BlackMagic, J-Link, ST-Link
         for link in ("blackmagic", "jlink", "stlink", "cmsis-dap"):
-            if link not in upload_protocols or link in debug['tools']:
+            if link not in upload_protocols or link in debug["tools"]:
                 continue
             if link == "blackmagic":
-                debug['tools']['blackmagic'] = {
+                debug["tools"]["blackmagic"] = {
                     "hwids": [["0x1d50", "0x6018"]],
                     "require_debug_port": True
                 }
             elif link == "jlink":
                 assert debug.get("jlink_device"), (
                     "Missed J-Link Device ID for %s" % board.id)
-                debug['tools'][link] = {
+                debug["tools"][link] = {
                     "server": {
                         "package": "tool-jlink",
                         "arguments": [
@@ -136,7 +151,7 @@ class Ststm32Platform(PlatformBase):
                             "-port", "2331"
                         ],
                         "executable": ("JLinkGDBServerCL.exe"
-                                       if system() == "Windows" else
+                                       if IS_WINDOWS else
                                        "JLinkGDBServer")
                     }
                 }
@@ -157,15 +172,27 @@ class Ststm32Platform(PlatformBase):
                     ])
                     server_args.extend(debug.get("openocd_extra_args", []))
 
-                debug['tools'][link] = {
+                debug["tools"][link] = {
                     "server": {
                         "package": "tool-openocd",
                         "executable": "bin/openocd",
                         "arguments": server_args
                     }
                 }
-            debug['tools'][link]['onboard'] = link in debug.get("onboard_tools", [])
-            debug['tools'][link]['default'] = link in debug.get("default_tools", [])
+            debug["tools"][link]["onboard"] = link in debug.get("onboard_tools", [])
+            debug["tools"][link]["default"] = link in debug.get("default_tools", [])
 
-        board.manifest['debug'] = debug
+        board.manifest["debug"] = debug
         return board
+
+    def configure_debug_session(self, debug_config):
+        if debug_config.speed:
+            server_executable = (debug_config.server or {}).get("executable", "").lower()
+            if "openocd" in server_executable:
+                debug_config.server["arguments"].extend(
+                    ["-c", "adapter speed %s" % debug_config.speed]
+                )
+            elif "jlink" in server_executable:
+                debug_config.server["arguments"].extend(
+                    ["-speed", debug_config.speed]
+                )

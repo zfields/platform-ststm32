@@ -35,20 +35,16 @@ if core == "maple":
     build_script = join(
         env.PioPlatform().get_package_dir("framework-arduinoststm32-maple"),
         "tools", "platformio-build-%s.py" % mcu[0:7])
-    if isfile(build_script):
-        SConscript(build_script)
-    else:
-        sys.stderr.write(
-            "Error: %s family is not supported by maple core\n" % mcu[0:7])
-        env.Exit(1)
-
-elif core == "stm32l4":
-    SConscript(
-        join(env.PioPlatform().get_package_dir(
-            "framework-arduinoststm32-stm32l4"),
-            "tools", "platformio-build.py"))
+elif core == "stm32l0":
+    build_script = join(
+        env.PioPlatform().get_package_dir("framework-arduinoststm32l0"),
+        "tools", "platformio-build.py")
 else:
-    SConscript(
-        join(env.PioPlatform().get_package_dir(
-            "framework-arduinoststm32"),
-            "tools", "platformio-build.py"))
+    build_script = join(env.PioPlatform().get_package_dir(
+        "framework-arduinoststm32"), "tools", "platformio", "platformio-build.py")
+
+if not isfile(build_script):
+    sys.stderr.write("Error: Missing PlatformIO build script %s!\n" % build_script)
+    env.Exit(1)
+
+SConscript(build_script)
