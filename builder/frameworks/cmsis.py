@@ -109,7 +109,7 @@ if not board.get("build.ldscript", ""):
 
 env.Append(
     CPPPATH=[
-        os.path.join(CMSIS_DIR, "CMSIS", "Core", "Include"),
+        os.path.join(CMSIS_DIR, "CMSIS", "Include"),
         os.path.join(CMSIS_DEVICE_DIR, "Include")
     ],
 
@@ -131,5 +131,10 @@ env.BuildSources(
     src_filter=[
         "-<*>",
         "+<%s>" % board.get("build.cmsis.system_file", "system_%sxx.c" % mcu[0:7]),
-        "+<gcc/startup_%s.S>" % product_line.lower()]
+        "+<gcc/%s>"
+        % board.get(
+            "build.cmsis.startup_file",
+            "startup_%s.S" % product_line.lower()
+        )
+    ]
 )

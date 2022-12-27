@@ -18,7 +18,7 @@
       "cmsis-dap"
     ],
     "openocd_target": "stm32l4x",
-    "svd_path": "STM32L4x6.svd"
+    "svd_path": "STM32L476.svd"
   },
   "frameworks": [
     "cmsis",
@@ -33,9 +33,9 @@
     "protocol": "cmsis-dap",
     "protocols": [
       "jlink",
+      "cmsis-dap",
       "stlink",
-      "blackmagic",
-      "cmsis-dap"
+      "blackmagic"
     ]
   },
   "url": "https://os.mbed.com/platforms/RHOMBIO-L476DMW1K/",

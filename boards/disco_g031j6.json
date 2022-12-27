@@ -9,16 +9,18 @@
     },
     "mcu": "stm32g031j6",
     "product_line": "STM32G031xx",
-    "variant": "DISCO_G0316"
+    "variant": "STM32G0xx/G031J(4-6)M_G041J6M"
   },
   "debug": {
     "jlink_device": "STM32G031J6",
+    "openocd_target": "stm32g0x",
     "svd_path": "STM32G031.svd"
   },
   "frameworks": [
     "arduino",
     "cmsis",
-    "libopencm3"
+    "libopencm3",
+    "stm32cube"
   ],
   "name": "ST STM32G0316-DISCO",
   "upload": {
@@ -27,6 +29,7 @@
     "protocol": "mbed",
     "protocols": [
       "blackmagic",
+      "cmsis-dap",
       "dfu",
       "jlink",
       "serial",

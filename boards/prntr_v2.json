@@ -4,9 +4,12 @@
     "cpu": "cortex-m4",
     "extra_flags": "-DSTM32F4 -DSTM32F407xx -DSTM32F40_41xxx",
     "f_cpu": "168000000L",
-    "mcu": "stm32f407re",
+    "framework_extra_flags": {
+      "arduino": "-DVECT_TAB_OFFSET=0x8000 -DCUSTOM_PERIPHERAL_PINS"
+    },
+    "mcu": "stm32f407vet6",
     "product_line": "STM32F407xx",
-    "variant": "PRNTR_Vx"
+    "variant": "STM32F4xx/F407V(E-G)T_F417V(E-G)T"
   },
   "connectivity": [
     "can"
@@ -24,7 +27,7 @@
   ],
   "name": "PrntrBoard V2",
   "upload": {
-    "maximum_ram_size": 196608,
+    "maximum_ram_size": 131072,
     "maximum_size": 524288,
     "protocol": "stlink",
     "protocols": [

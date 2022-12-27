@@ -15,7 +15,8 @@
       "stlink"
     ],
     "openocd_board": "st_nucleo_f0",
-    "svd_path": "STM32F0xx.svd"
+    "openocd_target": "stm32f0x",
+    "svd_path": "STM32F0x0.svd"
   },
   "frameworks": [
     "cmsis",
@@ -31,6 +32,7 @@
     "protocol": "stlink",
     "protocols": [
       "jlink",
+      "cmsis-dap",
       "stlink",
       "blackmagic",
       "mbed"

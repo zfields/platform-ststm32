@@ -5,7 +5,7 @@
     "f_cpu": "80000000L",
     "mcu": "stm32l496zgt6p",
     "product_line": "STM32L496xx",
-    "variant": "NUCLEO_L496ZG"
+    "variant": "STM32L4xx/L496ZGTxP_L4A6ZGTxP"
   },
   "connectivity": [
     "can"
@@ -19,7 +19,8 @@
       "stlink"
     ],
     "openocd_board": "st_nucleo_l4",
-    "svd_path": "STM32L4x6.svd"
+    "openocd_target": "stm32l4x",
+    "svd_path": "STM32L496.svd"
   },
   "frameworks": [
     "arduino",
@@ -35,6 +36,7 @@
     "protocol": "stlink",
     "protocols": [
       "jlink",
+      "cmsis-dap",
       "stlink",
       "blackmagic",
       "mbed"

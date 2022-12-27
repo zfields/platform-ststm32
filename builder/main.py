@@ -20,20 +20,40 @@ from os.path import basename, isdir, join
 from SCons.Script import (ARGUMENTS, COMMAND_LINE_TARGETS, AlwaysBuild,
                           Builder, Default, DefaultEnvironment)
 
+from platformio.public import list_serial_ports
+
+
+def BeforeUpload(target, source, env):  # pylint: disable=W0613,W0621
+    env.AutodetectUploadPort()
+
+    upload_options = {}
+    if "BOARD" in env:
+        upload_options = env.BoardConfig().get("upload", {})
+
+    if not bool(upload_options.get("disable_flushing", False)):
+        env.FlushSerialBuffer("$UPLOAD_PORT")
+
+    before_ports = list_serial_ports()
+
+    if bool(upload_options.get("use_1200bps_touch", False)):
+        env.TouchSerialPort("$UPLOAD_PORT", 1200)
+
+    if bool(upload_options.get("wait_for_upload_port", False)):
+        env.Replace(UPLOAD_PORT=env.WaitForNewSerialPort(before_ports))
+
 
 env = DefaultEnvironment()
-env.SConscript("compat.py", exports="env")
 platform = env.PioPlatform()
 board = env.BoardConfig()
 
 env.Replace(
-    AR="arm-none-eabi-ar",
+    AR="arm-none-eabi-gcc-ar",
     AS="arm-none-eabi-as",
     CC="arm-none-eabi-gcc",
     CXX="arm-none-eabi-g++",
     GDB="arm-none-eabi-gdb",
     OBJCOPY="arm-none-eabi-objcopy",
-    RANLIB="arm-none-eabi-ranlib",
+    RANLIB="arm-none-eabi-gcc-ranlib",
     SIZETOOL="arm-none-eabi-size",
 
     ARFLAGS=["rc"],
@@ -84,7 +104,8 @@ if not env.get("PIOFRAMEWORK"):
 # Target: Build executable and linkable firmware
 #
 
-if "zephyr" in env.get("PIOFRAMEWORK", []):
+frameworks = env.get("PIOFRAMEWORK", [])
+if "zephyr" in frameworks:
     env.SConscript(
         join(platform.get_package_dir(
             "framework-zephyr"), "scripts", "platformio", "platformio-build-pre.py"),
@@ -98,6 +119,7 @@ if "nobuild" in COMMAND_LINE_TARGETS:
 else:
     target_elf = env.BuildProgram()
     target_firm = env.ElfToBin(join("$BUILD_DIR", "${PROGNAME}"), target_elf)
+    env.Depends(target_firm, "checkprogsize")
 
 AlwaysBuild(env.Alias("nobuild", target_firm))
 target_buildprog = env.Alias("buildprog", target_firm, target_firm)
@@ -171,9 +193,10 @@ elif upload_protocol.startswith("jlink"):
         UPLOADER="JLink.exe" if system() == "Windows" else "JLinkExe",
         UPLOADERFLAGS=[
             "-device", board.get("debug", {}).get("jlink_device"),
-            "-speed", "4000",
+            "-speed", env.GetProjectOption("debug_speed", "4000"),
             "-if", ("jtag" if upload_protocol == "jlink-jtag" else "swd"),
-            "-autoconnect", "1"
+            "-autoconnect", "1",
+            "-NoGui", "1"
         ],
         UPLOADCMD='$UPLOADER $UPLOADERFLAGS -CommanderScript "${__jlink_cmd_script(__env__, SOURCE)}"'
     )
@@ -186,36 +209,42 @@ elif upload_protocol == "dfu":
     pid = hwids[0][1]
 
     # default tool for all boards with embedded DFU bootloader over USB
-    _upload_tool = "dfu-util"
+    _upload_tool = '"%s"' % join(platform.get_package_dir(
+        "tool-dfuutil") or "", "bin", "dfu-util")
     _upload_flags = [
-        "-d", "vid:pid,%s:%s" % (vid, pid),
+        "-d", ",".join(["%s:%s" % (hwid[0], hwid[1]) for hwid in hwids]),
         "-a", "0", "-s",
         "%s:leave" % board.get("upload.offset_address", "0x08000000"), "-D"
     ]
 
     upload_actions = [env.VerboseAction("$UPLOADCMD", "Uploading $SOURCE")]
 
-    if board.get("build.mcu").startswith("stm32f103") and "arduino" in env.get(
-        "PIOFRAMEWORK"):
-        # F103 series doesn't have embedded DFU over USB
-        # stm32duino bootloader (v1, v2) is used instead
-        def __configure_upload_port(env):
-            return basename(env.subst("$UPLOAD_PORT"))
+    if "arduino" in frameworks:
+        if env.subst("$BOARD").startswith("portenta"):
+            upload_actions.insert(
+                0,
+                env.VerboseAction(BeforeUpload, "Looking for upload port...")
+            )
+        elif board.get("build.mcu").startswith("stm32f103"):
+            # F103 series doesn't have embedded DFU over USB
+            # stm32duino bootloader (v1, v2) is used instead
+            def __configure_upload_port(env):
+                return basename(env.subst("$UPLOAD_PORT"))
 
-        _upload_tool = "maple_upload"
-        _upload_flags = [
-            "${__configure_upload_port(__env__)}",
-            board.get("upload.boot_version", 2),
-            "%s:%s" % (vid[2:], pid[2:])
-        ]
+            _upload_tool = "maple_upload"
+            _upload_flags = [
+                "${__configure_upload_port(__env__)}",
+                board.get("upload.boot_version", 2),
+                "%s:%s" % (vid[2:], pid[2:])
+            ]
 
-        env.Replace(__configure_upload_port=__configure_upload_port)
+            env.Replace(__configure_upload_port=__configure_upload_port)
 
-        upload_actions.insert(
-            0, env.VerboseAction(env.AutodetectUploadPort,
-                                 "Looking for upload port..."))
+            upload_actions.insert(
+                0, env.VerboseAction(env.AutodetectUploadPort,
+                                     "Looking for upload port..."))
 
-    if _upload_tool == "dfu-util":
+    if "dfu-util" in _upload_tool:
         # Add special DFU header to the binary image
         env.AddPostAction(
             join("$BUILD_DIR", "${PROGNAME}.bin"),
@@ -246,7 +275,7 @@ elif upload_protocol == "serial":
             "stm32flash", "stm32flash"),
         UPLOADERFLAGS=[
             "-g", board.get("upload.offset_address", "0x08000000"),
-            "-b", "115200", "-w"
+            "-b", env.subst("$UPLOAD_SPEED") or "115200", "-w"
         ],
         UPLOADCMD='$UPLOADER $UPLOADERFLAGS "$SOURCE" "${__configure_upload_port(__env__)}"'
     )
@@ -276,6 +305,10 @@ elif upload_protocol in debug_tools:
     ]
     openocd_args.extend(
         debug_tools.get(upload_protocol).get("server").get("arguments", []))
+    if env.GetProjectOption("debug_speed", ""):
+        openocd_args.extend(
+            ["-c", "adapter speed %s" % env.GetProjectOption("debug_speed")]
+        )
     openocd_args.extend([
         "-c", "program {$SOURCE} %s verify reset; shutdown;" %
         board.get("upload.offset_address", "")

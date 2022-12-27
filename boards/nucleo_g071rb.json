@@ -9,25 +9,35 @@
     },
     "mcu": "stm32g071rbt6",
     "product_line": "STM32G071xx",
-    "variant": "NUCLEO_G071RB"
+    "variant": "STM32G0xx/G071R(6-8)T_G071RB(I-T)_G081RB(I-T)"
   },
   "debug": {
+    "default_tools": [
+      "stlink"
+    ],
     "jlink_device": "STM32G071RB",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_target": "stm32g0x",
     "svd_path": "STM32G071.svd"
   },
   "frameworks": [
     "arduino",
     "cmsis",
     "libopencm3",
+    "stm32cube",
     "zephyr"
   ],
   "name": "Nucleo G071RB",
   "upload": {
     "maximum_ram_size": 36864,
     "maximum_size": 131072,
-    "protocol": "mbed",
+    "protocol": "stlink",
     "protocols": [
+      "stlink",
       "jlink",
+      "cmsis-dap",
       "blackmagic",
       "mbed"
     ]
