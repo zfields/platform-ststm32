@@ -212,6 +212,12 @@
       "owner": "platformio",
       "version": "~2.10.0"
     },
+    "framework-arduinoststm32-stm32l4": {
+      "type": "framework",
+      "optional": true,
+      "owner": "platformio",
+      "version": "https://github.com/maxgerhardt/arduino-STM32L4.git"
+    },
     "framework-arduino-mbed": {
       "type": "framework",
       "optional": true,

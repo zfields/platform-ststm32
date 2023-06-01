@@ -46,6 +46,10 @@ class Ststm32Platform(PlatformBase):
                 self.frameworks["arduino"]["package"] = "framework-arduinoststm32l0"
                 self.packages["framework-arduinoststm32l0"]["optional"] = False
                 self.packages["framework-arduinoststm32"]["optional"] = True
+            elif build_core == "stm32l4":
+                self.frameworks["arduino"]["package"] = "framework-arduinoststm32-stm32l4"
+                self.packages["framework-arduinoststm32-stm32l4"]["optional"] = False
+                self.packages["framework-arduinoststm32"]["optional"] = True
             else:
                 self.packages["toolchain-gccarmnoneeabi"]["version"] = "~1.90201.0"
                 self.packages["framework-cmsis"]["version"] = "~2.50700.0"
